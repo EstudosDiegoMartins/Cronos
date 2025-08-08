@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cronos - Gerenciador de Revisões Espaçadas</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+        :root {
+            --primary-color: #2F80ED;
+            --secondary-color: #F2F2F2;
+            --background-color: #E5E5E5;
+            --card-background: #FFFFFF;
+            --text-color: #333333;
+            --light-text: #828282;
+            --border-color: #E0E0E0;
+            --success-color: #27AE60;
+            --warning-color: #F2994A;
+            --error-color: #EB5757;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: auto;
+            background-color: var(--card-background);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 40px;
+            font-weight: 700;
+            font-size: 2.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .input-group input[type="text"],
+        .input-group input[type="date"] {
+            flex-grow: 1;
+            padding: 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.2);
+        }
+        
+        .input-group button, .input-group label {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .input-group button:hover, .input-group label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .input-group button:active {
+            transform: translateY(0);
+        }
+
+        #adicionar {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        #adicionar:hover {
+            background-color: #2D68C4;
+        }
+
+        #limparTudo {
+            background-color: var(--error-color);
+            color: white;
+        }
+
+        #limparTudo:hover {
+            background-color: #C04444;
+        }
+        
+        #exportarProgresso {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        #exportarProgresso:hover {
+            background-color: #5a6268;
+        }
+
+        #importarArquivo {
+            display: none;
+        }
+
+        label[for="importarArquivo"] {
+            background-color: #6c757d;
+            color: white;
+            text-align: center;
+        }
+
+        label[for="importarArquivo"]:hover {
+            background-color: #5a6268;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 1000px;
+        }
+
+        th, td {
+            border: none;
+            padding: 15px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        thead tr {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        thead th {
+            padding: 18px 15px;
+        }
+
+        thead th:first-child { border-top-left-radius: 10px; }
+        thead th:last-child { border-top-right-radius: 10px; }
+
+        tbody tr {
+            background-color: var(--card-background);
+            transition: background-color 0.3s ease;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: var(--secondary-color);
+        }
+
+        tbody tr:hover {
+            background-color: #F5F5F5;
+        }
+        
+        tbody tr:last-child td:first-child { border-bottom-left-radius: 10px; }
+        tbody tr:last-child td:last-child { border-bottom-right-radius: 10px; }
+
+        td {
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .checkbox {
+            transform: scale(1.3);
+            accent-color: var(--success-color);
+            cursor: pointer;
+        }
+
+        .btn-action {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-edit {
+            background-color: var(--warning-color);
+            color: white;
+            margin-right: 5px;
+        }
+        
+        .btn-edit:hover { background-color: #D68741; }
+
+        .btn-delete {
+            background-color: var(--error-color);
+            color: white;
+        }
+
+        .btn-delete:hover { background-color: #C74545; }
+
+        .info-container {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .info-box {
+            flex: 1;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .hoje-box {
+            background-color: #E8F6F1;
+            border: 2px solid var(--success-color);
+        }
+
+        .atrasadas-box {
+            background-color: #FCEAEA;
+            border: 2px solid var(--error-color);
+        }
+
+        .info-box h4 {
+            margin: 0 0 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .hoje-box h4 { color: var(--success-color); }
+        .atrasadas-box h4 { color: var(--error-color); }
+
+        .info-box ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .info-box li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            font-size: 1rem;
+            color: var(--light-text);
+        }
+        
+        .info-box li:last-child {
+            border-bottom: none;
+        }
+
+        .legendas-container {
+            margin-top: 40px;
+            background-color: var(--secondary-color);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .legendas-container h3 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 700;
+            font-size: 1.8rem;
+        }
+        
+        .legendas-container ul {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .legendas-container li {
+            padding: 20px;
+            background-color: var(--card-background);
+            border-left: 5px solid var(--primary-color);
+            border-radius: 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .legendas-container li:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .legendas-container strong {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+            .input-group input, .input-group button, .input-group label {
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .info-container {
+                flex-direction: column;
+            }
+            .legendas-container ul {
+                grid-template-columns: 1fr;
+            }
+            .container {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Cronos - Gerenciador de Revisões Espaçadas</h2>
+
+        <div class="input-group">
+            <input type="text" id="conteudo" placeholder="Conteúdo estudado">
+            <input type="date" id="dataEstudo">
+            <button id="adicionar" onclick="adicionarEstudo()">Adicionar</button>
+            <button id="limparTudo" onclick="limparTudo()">Limpar Tudo</button>
+            <button id="exportarProgresso" onclick="exportarProgresso()">Exportar</button>
+            <label for="importarArquivo">Importar</label>
+            <input type="file" id="importarArquivo" onchange="importarProgresso()">
+        </div>
+
+        <div class="info-container">
+            <div class="info-box hoje-box">
+                <h4><span class="icon">📌</span> Revisões para hoje:</h4>
+                <ul id="hoje"></ul>
+            </div>
+    
+            <div class="info-box atrasadas-box">
+                <h4><span class="icon">⚠️</span> Revisões atrasadas:</h4>
+                <ul id="atrasadas"></ul>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table id="tabelaEstudos">
+                <thead>
+                    <tr>
+                        <th>Conteúdo</th>
+                        <th>Data Estudo</th>
+                        <th>Rev. 1<br>(1 dia)</th><th>Feita?</th>
+                        <th>Rev. 2<br>(7 dias)</th><th>Feita?</th>
+                        <th>Rev. 3<br>(14 dias)</th><th>Feita?</th>
+                        <th>Rev. 4<br>(30 dias)</th><th>Feita?</th>
+                        <th>Rev. 5<br>(45 dias)</th><th>Feita?</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="corpoTabela"></tbody>
+            </table>
+        </div>
+
+        <div class="legendas-container">
+            <h3>Metodologia de Revisão</h3>
+            <ul>
+                <li>
+                    <strong>Revisão 1 (1 dia):</strong> Estudo ativo fazendo perguntas entre os alunos.
+                </li>
+                <li>
+                    <strong>Revisão 2 (7 dias):</strong> Fazer questões de concurso e mostrar pontos importantes em cada questão durante a resolução das questões.
+                </li>
+                <li>
+                    <strong>Revisão 3 (14 dias):</strong> Fazer questões de concurso e revisar o conteúdo das questões que teve erro.
+                </li>
+                <li>
+                    <strong>Revisão 4 (30 dias):</strong> Fazer questões de concurso e criar um caso real com os temas das questões.
+                </li>
+                <li>
+                    <strong>Revisão 5 (45 dias):</strong> Fazer questões e revisar só o que errou.
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script type="module">
+        // Importa as funções necessárias do Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+
+        // Sua configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDizwy3B8utvFVrRjWCtkaNKLcQbsVwgxQ",
+            authDomain: "cronos-75f9f.firebaseapp.com",
+            projectId: "cronos-75f9f",
+            storageBucket: "cronos-75f9f.firebasestorage.app",
+            messagingSenderId: "422714133454",
+            appId: "1:422714133454:web:4fc9888102bed526b7399f"
+        };
+        
+        // Inicializa o Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const estudosCollection = collection(db, "estudos");
+
+        const ciclosRevisao = [1, 7, 14, 30, 45];
+        
+        window.adicionarEstudo = async () => {
+            const conteudo = document.getElementById("conteudo").value;
+            const data = document.getElementById("dataEstudo").value;
+            if (!conteudo || !data) {
+                alert("Por favor, preencha todos os campos!");
+                return;
+            }
+
+            await addDoc(estudosCollection, {
+                conteudo,
+                dataEstudo: data,
+                feitas: new Array(ciclosRevisao.length).fill(false)
+            });
+
+            document.getElementById("conteudo").value = "";
+            document.getElementById("dataEstudo").value = "";
+        };
+
+        window.limparTudo = async () => {
+            if (confirm("Tem certeza que deseja limpar todos os estudos? Esta ação é irreversível.")) {
+                const querySnapshot = await getDocs(estudosCollection);
+                querySnapshot.forEach(async (docRef) => {
+                    await deleteDoc(doc(db, "estudos", docRef.id));
+                });
+            }
+        };
+
+        window.exportarProgresso = async () => {
+            const querySnapshot = await getDocs(estudosCollection);
+            const estudos = querySnapshot.docs.map(doc => doc.data());
+            const blob = new Blob([JSON.stringify(estudos)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "cronos_progresso_estudos.json";
+            a.click();
+        };
+
+        window.importarProgresso = async () => {
+            const arquivo = document.getElementById("importarArquivo").files[0];
+            if (!arquivo) return;
+            const reader = new FileReader();
+            reader.onload = async () => {
+                try {
+                    const dadosImportados = JSON.parse(reader.result);
+                    for (const estudo of dadosImportados) {
+                        await addDoc(estudosCollection, {
+                            conteudo: estudo.conteudo,
+                            dataEstudo: estudo.dataEstudo,
+                            feitas: new Array(ciclosRevisao.length).fill(false)
+                        });
+                    }
+                    alert("Dados importados com sucesso!");
+                } catch {
+                    alert("Erro ao importar arquivo. Verifique se o formato está correto.");
+                }
+            };
+            reader.readAsText(arquivo);
+        };
+        
+        window.toggle = async (docId, j) => {
+            const docRef = doc(db, "estudos", docId);
+            const docSnapshot = await getDoc(docRef);
+            if (docSnapshot.exists()) {
+                const feitas = docSnapshot.data().feitas;
+                feitas[j] = !feitas[j];
+                await updateDoc(docRef, { feitas: feitas });
+            }
+        };
+
+        window.excluir = async (docId) => {
+            if (confirm("Deseja excluir este ciclo de estudos?")) {
+                await deleteDoc(doc(db, "estudos", docId));
+            }
+        };
+
+        window.editar = async (docId, conteudoAtual, dataAtual) => {
+            const novoConteudo = prompt("Editar conteúdo:", conteudoAtual);
+            const novaData = prompt("Editar data (aaaa-mm-dd):", dataAtual);
+            if (novoConteudo !== null && novaData !== null) {
+                if (novoConteudo && novaData) {
+                    await updateDoc(doc(db, "estudos", docId), {
+                        conteudo: novoConteudo,
+                        dataEstudo: novaData
+                    });
+                } else {
+                    alert("Conteúdo e data não podem ser vazios.");
+                }
+            }
+        };
+
+        function somaDias(data, dias) {
+            const d = new Date(data + 'T00:00:00');
+            d.setDate(d.getDate() + dias);
+            return d.toISOString().split("T")[0];
+        }
+
+        // A função de renderização que "escuta" o banco de dados
+        onSnapshot(estudosCollection, (snapshot) => {
+            const corpo = document.getElementById("corpoTabela");
+            const hojeUl = document.getElementById("hoje");
+            const atrasadasUl = document.getElementById("atrasadas");
+            const hoje = new Date().toISOString().split("T")[0];
+
+            corpo.innerHTML = "";
+            hojeUl.innerHTML = "";
+            atrasadasUl.innerHTML = "";
+            
+            let revisoesHojeCount = 0;
+            let revisoesAtrasadasCount = 0;
+
+            snapshot.docs.forEach((doc) => {
+                const item = doc.data();
+                const docId = doc.id;
+                const tr = document.createElement("tr");
+                const datas = ciclosRevisao.map(d => somaDias(item.dataEstudo, d));
+                
+                let revisoesHtml = "";
+                datas.forEach((rev, idx) => {
+                    revisoesHtml += `
+                        <td>${rev}</td>
+                        <td><input type="checkbox" class="checkbox" onchange="toggle('${docId}', ${idx})" ${item.feitas[idx] ? 'checked' : ''}></td>
+                    `;
+                    if (rev === hoje && !item.feitas[idx]) {
+                        const li = document.createElement("li");
+                        li.innerText = `[Rev. ${idx + 1}] ${item.conteudo}`;
+                        hojeUl.appendChild(li);
+                        revisoesHojeCount++;
+                    }
+                    if (rev < hoje && !item.feitas[idx]) {
+                        const li = document.createElement("li");
+                        li.innerText = `[Rev. ${idx + 1}] ${item.conteudo} (${rev})`;
+                        atrasadasUl.appendChild(li);
+                        revisoesAtrasadasCount++;
+                    }
+                });
+
+                tr.innerHTML = `
+                    <td>${item.conteudo}</td>
+                    <td>${item.dataEstudo}</td>
+                    ${revisoesHtml}
+                    <td>
+                        <button class="btn-action btn-edit" onclick="editar('${docId}', '${item.conteudo}', '${item.dataEstudo}')">✏️</button>
+                        <button class="btn-action btn-delete" onclick="excluir('${docId}')">🗑️</button>
+                    </td>
+                `;
+                corpo.appendChild(tr);
+            });
+
+            if (revisoesHojeCount === 0) {
+                hojeUl.innerHTML = "<li>Nenhuma revisão para hoje. 🎉</li>";
+            }
+            if (revisoesAtrasadasCount === 0) {
+                atrasadasUl.innerHTML = "<li>Nenhuma revisão atrasada. ✅</li>";
+            }
+        });
+    </script>
+</body>
+</html>
