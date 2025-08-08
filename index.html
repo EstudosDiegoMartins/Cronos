@@ -312,6 +312,20 @@
             color: var(--primary-color);
             font-weight: 600;
         }
+        
+        /* Alterações de estilo para o texto das legendas */
+        .legendas-container p {
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .legendas-container p strong {
+            color: var(--text-color);
+            font-weight: 700;
+            display: inline;
+        }
+        /* Fim das alterações de estilo */
 
         @media (max-width: 768px) {
             .input-group {
@@ -331,7 +345,7 @@
                 padding: 20px;
             }
         }
-        
+
         #back-to-top {
             position: fixed;
             bottom: 20px;
@@ -353,6 +367,32 @@
             background-color: #2D68C4;
             transform: translateY(-2px);
         }
+
+        .motivational-box {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #E6F3FF;
+            border: 2px solid #56CCF2;
+            text-align: center;
+        }
+
+        .motivational-box h4 {
+            margin: 0;
+            color: #2F80ED;
+            font-weight: 700;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .motivational-box p {
+            margin: 10px 0 0 0;
+            font-size: 1.1rem;
+            color: #56CCF2;
+        }
     </style>
 </head>
 <body>
@@ -368,6 +408,11 @@
             <button id="exportarProgresso" onclick="exportarProgresso()">Exportar</button>
             <label for="importarArquivo">Importar</label>
             <input type="file" id="importarArquivo" onchange="importarProgresso()">
+        </div>
+        
+        <div class="motivational-box">
+            <h4><span class="icon">🏆</span> Streak de Revisão: <span id="streak-counter">0</span> dias seguidos!</h4>
+            <p id="motivational-message">Continue assim, a consistência é a chave para a aprovação.</p>
         </div>
 
         <div class="info-container">
@@ -405,23 +450,23 @@
             <ul>
                 <li>
                     <strong>Revisão 1 (1 dia após o estudo)</strong>
-                    <p>Objetivo: Fixação inicial do conteúdo.<br>Método: Estudo ativo em grupo, com foco na discussão e criação de perguntas entre os participantes para aprofundar o entendimento.</p>
+                    <p><strong>Objetivo:</strong> Fixação inicial do conteúdo.<br><strong>Método:</strong> Estudo ativo em grupo, com foco na discussão e criação de perguntas entre os participantes para aprofundar o entendimento.</p>
                 </li>
                 <li>
                     <strong>Revisão 2 (7 dias após o estudo)</strong>
-                    <p>Objetivo: Aplicação e identificação de pontos-chave.<br>Método: Resolução de questões de concursos anteriores, com análise detalhada dos pontos importantes abordados em cada questão.</p>
+                    <p><strong>Objetivo:</strong> Aplicação e identificação de pontos-chave.<br><strong>Método:</strong> Resolução de questões de concursos anteriores, com análise detalhada dos pontos importantes abordados em cada questão.</p>
                 </li>
                 <li>
                     <strong>Revisão 3 (14 dias após o estudo)</strong>
-                    <p>Objetivo: Reforço e correção de lacunas.<br>Método: Prática com novas questões de concurso, seguida de uma revisão focada nos temas das questões em que houve erros.</p>
+                    <p><strong>Objetivo:</strong> Reforço e correção de lacunas.<br><strong>Método:</strong> Prática com novas questões de concurso, seguida de uma revisão focada nos temas das questões em que houve erros.</p>
                 </li>
                 <li>
                     <strong>Revisão 4 (30 dias após o estudo)</strong>
-                    <p>Objetivo: Análise crítica e contextualização.<br>Método: Resolução de questões e elaboração de um estudo de caso prático, utilizando os temas abordados nas questões para simular uma situação real.</p>
+                    <p><strong>Objetivo:</strong> Análise crítica e contextualização.<br><strong>Método:</strong> Resolução de questões e elaboração de um estudo de caso prático, utilizando os temas abordados nas questões para simular uma situação real.</p>
                 </li>
                 <li>
                     <strong>Revisão 5 (45 dias após o estudo)</strong>
-                    <p>Objetivo: Consolidação final.<br>Método: Resolução de questões e revisão direcionada, concentrando-se exclusivamente nos tópicos e conceitos em que a performance foi mais fraca.</p>
+                    <p><strong>Objetivo:</strong> Consolidação final.<br><strong>Método:</strong> Resolução de questões e revisão direcionada, concentrando-se exclusivamente nos tópicos e conceitos em que a performance foi mais fraca.</p>
                 </li>
             </ul>
         </div>
@@ -431,14 +476,14 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, getDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, getDoc, deleteDoc, doc, updateDoc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
         // Sua configuração do Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDizwy3B8utvFVrRjWCtkaNKLcQbsVwgxQ",
             authDomain: "cronos-75f9f.firebaseapp.com",
             projectId: "cronos-75f9f",
-            sorageBucket: "cronos-75f9f.firebasestorage.app",
+            storageBucket: "cronos-75f9f.firebasestorage.app",
             messagingSenderId: "422714133454",
             appId: "1:422714133454:web:4fc9888102bed526b7399f"
         };
@@ -446,6 +491,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const estudosCollection = collection(db, "estudos");
+        const contadorDocRef = doc(db, "contador", "consecutivo");
 
         const ciclosRevisao = [1, 7, 14, 30, 45];
         
@@ -512,8 +558,13 @@
             const docSnapshot = await getDoc(docRef);
             if (docSnapshot.exists()) {
                 const feitas = docSnapshot.data().feitas;
-                feitas[j] = !feitas[j];
+                const isChecking = !feitas[j];
+                feitas[j] = isChecking;
                 await updateDoc(docRef, { feitas: feitas });
+                
+                if (isChecking) {
+                    await updateCounter();
+                }
             }
         };
 
@@ -543,6 +594,58 @@
             d.setDate(d.getDate() + dias);
             return d.toISOString().split("T")[0];
         }
+
+        const updateCounter = async () => {
+            const hoje = new Date();
+            const hojeStr = hoje.toISOString().split('T')[0];
+
+            const docSnapshot = await getDoc(contadorDocRef);
+            let lastRevisionDate = null;
+            let consecutiveDays = 0;
+
+            if (docSnapshot.exists()) {
+                const data = docSnapshot.data();
+                lastRevisionDate = data.lastRevisionDate;
+                consecutiveDays = data.consecutiveDays;
+            }
+
+            if (lastRevisionDate === hojeStr) {
+                return;
+            }
+
+            const lastDate = new Date(lastRevisionDate);
+            const diffTime = Math.abs(hoje.getTime() - lastDate.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 1) {
+                consecutiveDays++;
+            } else if (diffDays > 1) {
+                consecutiveDays = 1;
+            } else {
+                consecutiveDays = 1;
+            }
+
+            await setDoc(contadorDocRef, {
+                lastRevisionDate: hojeStr,
+                consecutiveDays: consecutiveDays
+            }, { merge: true });
+        };
+        
+        onSnapshot(contadorDocRef, (doc) => {
+            if (doc.exists()) {
+                const data = doc.data();
+                const counterElement = document.getElementById("streak-counter");
+                const messageElement = document.getElementById("motivational-message");
+                
+                if (data.consecutiveDays > 0) {
+                    counterElement.innerText = data.consecutiveDays;
+                    messageElement.innerText = `Você revisou por ${data.consecutiveDays} dias seguidos!`;
+                } else {
+                    counterElement.innerText = '0';
+                    messageElement.innerText = `Comece a revisar hoje para iniciar sua sequência!`;
+                }
+            }
+        });
 
         onSnapshot(estudosCollection, (snapshot) => {
             const corpo = document.getElementById("corpoTabela");
