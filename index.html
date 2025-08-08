@@ -25,6 +25,7 @@
             padding: 20px;
             background-color: var(--background-color);
             color: var(--text-color);
+            position: relative;
         }
 
         .container {
@@ -284,21 +285,25 @@
             font-size: 1.8rem;
         }
         
+        /* Alterações feitas aqui */
         .legendas-container ul {
             list-style: none;
             padding: 0;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            justify-content: center;
         }
 
         .legendas-container li {
-            padding: 20px;
+            padding: 15px; /* Reduzindo o padding */
             background-color: var(--card-background);
             border-left: 5px solid var(--primary-color);
             border-radius: 10px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            font-size: 0.9rem; /* Diminuindo a fonte */
         }
+        /* Fim das alterações */
 
         .legendas-container li:hover {
             transform: translateY(-5px);
@@ -329,6 +334,29 @@
             .container {
                 padding: 20px;
             }
+        }
+
+        /* Novo estilo para o botão Voltar ao Topo */
+        #back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 50%;
+            text-decoration: none;
+            display: none; /* Escondido por padrão */
+            font-size: 24px;
+            line-height: 1;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        
+        #back-to-top:hover {
+            background-color: #2D68C4;
+            transform: translateY(-2px);
         }
     </style>
 </head>
@@ -398,11 +426,12 @@
             </ul>
         </div>
     </div>
+    
+    <a id="back-to-top" href="#">↑</a>
 
     <script type="module">
-        // Importa as funções necessárias do Firebase
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, getDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
 
         // Sua configuração do Firebase
         const firebaseConfig = {
@@ -414,7 +443,6 @@
             appId: "1:422714133454:web:4fc9888102bed526b7399f"
         };
         
-        // Inicializa o Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const estudosCollection = collection(db, "estudos");
@@ -442,9 +470,8 @@
         window.limparTudo = async () => {
             if (confirm("Tem certeza que deseja limpar todos os estudos? Esta ação é irreversível.")) {
                 const querySnapshot = await getDocs(estudosCollection);
-                querySnapshot.forEach(async (docRef) => {
-                    await deleteDoc(doc(db, "estudos", docRef.id));
-                });
+                const promises = querySnapshot.docs.map(docRef => deleteDoc(doc(db, "estudos", docRef.id)));
+                await Promise.all(promises);
             }
         };
 
@@ -466,13 +493,12 @@
             reader.onload = async () => {
                 try {
                     const dadosImportados = JSON.parse(reader.result);
-                    for (const estudo of dadosImportados) {
-                        await addDoc(estudosCollection, {
-                            conteudo: estudo.conteudo,
-                            dataEstudo: estudo.dataEstudo,
-                            feitas: new Array(ciclosRevisao.length).fill(false)
-                        });
-                    }
+                    const promises = dadosImportados.map(estudo => addDoc(estudosCollection, {
+                        conteudo: estudo.conteudo,
+                        dataEstudo: estudo.dataEstudo,
+                        feitas: new Array(ciclosRevisao.length).fill(false)
+                    }));
+                    await Promise.all(promises);
                     alert("Dados importados com sucesso!");
                 } catch {
                     alert("Erro ao importar arquivo. Verifique se o formato está correto.");
@@ -518,7 +544,6 @@
             return d.toISOString().split("T")[0];
         }
 
-        // A função de renderização que "escuta" o banco de dados
         onSnapshot(estudosCollection, (snapshot) => {
             const corpo = document.getElementById("corpoTabela");
             const hojeUl = document.getElementById("hoje");
@@ -575,6 +600,17 @@
             }
             if (revisoesAtrasadasCount === 0) {
                 atrasadasUl.innerHTML = "<li>Nenhuma revisão atrasada. ✅</li>";
+            }
+        });
+        
+        // Lógica do botão Voltar ao Topo
+        const backToTopButton = document.getElementById('back-to-top');
+
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopButton.style.display = 'block';
+            } else {
+                backToTopButton.style.display = 'none';
             }
         });
     </script>
